@@ -10,5 +10,10 @@ namespace Application.Abstractions
     public interface IPeopleRepository
     {
         Task<ICollection<Persona>> GetAll();
+        Task<Persona> Get(int id);
+        Task Delete(int id);
+
+        Task<Persona> Create(Persona persona);
+        Task<Persona> Update(Persona persona);
     }
 }
