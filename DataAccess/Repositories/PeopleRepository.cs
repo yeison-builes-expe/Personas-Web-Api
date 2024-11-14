@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions;
 using DataAccess.Contexts;
+using Domain.Exceptions;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -21,6 +22,12 @@ namespace DataAccess.Repositories
 
         public async Task<Persona> Create(Persona persona)
         {
+            var alreadyExists = await _context.Personas.SingleOrDefaultAsync(x => x.Cedula == persona.Cedula);
+
+            if (alreadyExists != null)
+            {
+                throw new DuplicateRecordException(persona.Cedula);
+            }
             await _context.Personas.AddAsync(persona);
             await _context.SaveChangesAsync();
 

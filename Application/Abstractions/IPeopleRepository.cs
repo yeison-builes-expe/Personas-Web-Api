@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Application.Abstractions
 {
+    /// <summary>
+    /// Interact with db
+    /// </summary>
     public interface IPeopleRepository
     {
         Task<ICollection<Persona>> GetAll();

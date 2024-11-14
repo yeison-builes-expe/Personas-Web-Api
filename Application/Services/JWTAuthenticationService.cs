@@ -11,19 +11,27 @@ using System.Threading.Tasks;
 
 namespace Application.Services
 {
-    public class AuthenticationService : IAuthenticationService
+    /// <summary>
+    /// JWT Auth Service
+    /// </summary>
+    public class JWTAuthenticationService : IAuthenticationService
     {
         private readonly string _secretKey;
         private readonly string _issuer;
         private readonly string _audience;
 
-        public AuthenticationService(IConfiguration configuration)
+        public JWTAuthenticationService(IConfiguration configuration)
         {
             _secretKey = configuration["JwtSettings:SecretKey"];
             _issuer = configuration["JwtSettings:Issuer"];
             _audience = configuration["JwtSettings:Audience"];
         }
 
+        /// <summary>
+        /// Get bearer token
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
         public string GenerateToken(string username)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));

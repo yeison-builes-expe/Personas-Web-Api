@@ -3,6 +3,7 @@ using Application.DTO;
 using Application.Services;
 using DataAccess.Contexts;
 using DataAccess.Repositories;
+using Domain.Exceptions;
 using Domain.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -43,7 +44,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(cs));
 builder.Services.AddScoped<IPeopleRepository, PeopleRepository>();
-builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+builder.Services.AddSingleton<IAuthenticationService, JWTAuthenticationService>();
 
 //auth
 builder.Services.AddAuthorization();
@@ -59,10 +60,11 @@ app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();  // Genera la documentación de la API
-    app.UseSwaggerUI();  // Interfaz gráfica interactiva de Swagger
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
+///Allows to login
 app.MapPost("/api/login", (IAuthenticationService authService,UserLoginDTO userLogin) =>
 {
     if (userLogin.User == "admin" && userLogin.Password == "admin")
@@ -78,6 +80,7 @@ app.MapPost("/api/login", (IAuthenticationService authService,UserLoginDTO userL
     return Results.Unauthorized();
 });
 
+///Allows to get all records
 app.MapGet("/api/personas",[Authorize] async(IPeopleRepository repository)=>{
     var personas = await repository.GetAll();
     if (personas.Count() > 0)
@@ -98,6 +101,8 @@ app.MapGet("/api/personas",[Authorize] async(IPeopleRepository repository)=>{
     });
 });
 
+
+///Allows to get one record
 app.MapGet("/api/personas/{id}", [Authorize] async (IPeopleRepository repository,int id) => {
     var result = await repository.Get(id);
     if (result == null)
@@ -118,6 +123,8 @@ app.MapGet("/api/personas/{id}", [Authorize] async (IPeopleRepository repository
     });
 });
 
+
+///Allows to create a record
 app.MapPost("/api/personas", async (IPeopleRepository repository, Persona toCreate) => {
     try
     {
@@ -128,6 +135,15 @@ app.MapPost("/api/personas", async (IPeopleRepository repository, Persona toCrea
             data = toCreate,
             status = 200,
             message = "Registrado correctamente"
+        });
+    }
+    catch (DuplicateRecordException ex)
+    {
+        return Results.BadRequest(new ResponseDTO
+        {
+            data = null,
+            status = 400,
+            message = ex.Message
         });
     }
     catch (Exception ex)
@@ -141,6 +157,8 @@ app.MapPost("/api/personas", async (IPeopleRepository repository, Persona toCrea
     }
 });
 
+
+///Allows to delete one record
 app.MapDelete("/api/personas/{id}", async (IPeopleRepository repository, int id) => {
     try
     {
@@ -164,6 +182,8 @@ app.MapDelete("/api/personas/{id}", async (IPeopleRepository repository, int id)
     }
 });
 
+
+///Allows to update one record
 app.MapPut("/api/personas", async (IPeopleRepository repository, Persona toUpdate) => {
     try
     {
